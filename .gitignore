@@ -419,6 +419,27 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
+
+# Secrets and credentials
+/secrets/
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+credentials.json
+service-account.json
+*.secret
+
+# API keys and tokens (even if example)
+*api_key*
+*API_KEY*
+*secret*
+*SECRET*
+*.token
+*.TOKEN
 
 # next.js build output
 .next

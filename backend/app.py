@@ -6,11 +6,13 @@ and real-time visualization of emergent civilization dynamics.
 """
 
 import asyncio
+import os
 from typing import Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field, field_validator
 import uvicorn
 
 from simulation.engine import SimulationEngine, SimulationConfig, SimulationState
@@ -18,30 +20,73 @@ from simulation.environmental_stimuli import StimulusType
 from adapters import LLMMode
 
 
-# Request/Response models
+# Security
+security = HTTPBearer(auto_error=False)
+
+# Environment-based configuration
+ALLOWED_ORIGINS = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:5173,http://localhost:5174"
+).split(",")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Request/Response models with validation
 class SimulationConfigRequest(BaseModel):
-    num_agents: int = 300
-    seed: Optional[int] = 42
-    max_ticks: int = 10000
-    llm_mode: str = "mock"
-    llm_model: str = "gpt-3.5-turbo"
-    llm_temperature: float = 0.3
-    tick_duration_ms: int = 100
-    agents_per_tick: int = 50
-    interactions_per_tick: int = 100
-    memory_backend: str = "networkx"
-    vector_backend: str = "faiss"
-    snapshot_frequency: int = 20
-    snapshot_directory: str = "snapshots"
-    stimuli_file: Optional[str] = None
+    num_agents: int = Field(default=300, ge=1, le=10000, description="Number of agents")
+    seed: Optional[int] = Field(default=42, ge=0, description="Random seed")
+    max_ticks: int = Field(default=10000, ge=1, le=1000000, description="Maximum simulation ticks")
+    llm_mode: str = Field(default="mock", description="LLM mode")
+    llm_model: str = Field(default="gpt-3.5-turbo", max_length=100, description="LLM model name")
+    llm_temperature: float = Field(default=0.3, ge=0.0, le=2.0, description="LLM temperature")
+    tick_duration_ms: int = Field(default=100, ge=1, le=10000, description="Tick duration in ms")
+    agents_per_tick: int = Field(default=50, ge=1, le=1000, description="Agents processed per tick")
+    interactions_per_tick: int = Field(default=100, ge=1, le=10000, description="Interactions per tick")
+    memory_backend: str = Field(default="networkx", description="Memory backend")
+    vector_backend: str = Field(default="faiss", description="Vector backend")
+    snapshot_frequency: int = Field(default=20, ge=1, le=1000, description="Snapshot frequency")
+    snapshot_directory: str = Field(default="snapshots", max_length=200, description="Snapshot directory")
+    stimuli_file: Optional[str] = Field(default=None, max_length=500, description="Stimuli file path")
+    
+    @field_validator("snapshot_directory")
+    @classmethod
+    def validate_snapshot_directory(cls, v):
+        """Validate snapshot directory doesn't contain path traversal."""
+        if ".." in v or v.startswith("/"):
+            raise ValueError("Invalid snapshot directory path")
+        return v
+    
+    @field_validator("stimuli_file")
+    @classmethod
+    def validate_stimuli_file(cls, v):
+        """Validate stimuli file path doesn't contain path traversal."""
+        if v and (".." in v or v.startswith("/")):
+            raise ValueError("Invalid stimuli file path")
+        return v
 
 
 class SimulationControlRequest(BaseModel):
-    action: str  # "start", "pause", "resume", "stop", "step"
+    action: str = Field(..., description="Action to perform")
+    
+    @field_validator("action")
+    @classmethod
+    def validate_action(cls, v):
+        """Validate action is one of the allowed values."""
+        allowed_actions = ["start", "pause", "resume", "stop", "step"]
+        if v.lower() not in allowed_actions:
+            raise ValueError(f"Action must be one of: {', '.join(allowed_actions)}")
+        return v.lower()
 
 
 class SnapshotRequest(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(default=None, max_length=100, description="Snapshot name")
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v):
+        """Validate snapshot name doesn't contain dangerous characters."""
+        if v and (".." in v or "/" in v or "\\" in v):
+            raise ValueError("Invalid snapshot name")
+        return v
 
 
 # Global simulation engine instance
@@ -54,13 +99,16 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Add CORS middleware
+# Add CORS middleware with environment-based configuration
+# In production, restrict to allowed origins; in development, allow all
+cors_origins = ALLOWED_ORIGINS if ENVIRONMENT == "production" else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 
@@ -119,16 +167,29 @@ async def root():
 # Simulation control endpoints
 @app.post("/simulation/initialize")
 async def initialize_simulation(config: SimulationConfigRequest):
-    """Initialize a new simulation with the given configuration."""
+    """
+    Initialize a new simulation with the given configuration.
+    
+    Validates input and creates a new simulation engine instance.
+    """
     global simulation_engine
     
     try:
+        # Validate LLM mode
+        try:
+            llm_mode = LLMMode(config.llm_mode)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid LLM mode: {config.llm_mode}"
+            )
+        
         # Convert request to config
         sim_config = SimulationConfig(
             num_agents=config.num_agents,
             seed=config.seed,
             max_ticks=config.max_ticks,
-            llm_mode=LLMMode(config.llm_mode),
+            llm_mode=llm_mode,
             llm_model=config.llm_model,
             llm_temperature=config.llm_temperature,
             tick_duration_ms=config.tick_duration_ms,
@@ -148,10 +209,25 @@ async def initialize_simulation(config: SimulationConfigRequest):
         if success:
             return {"status": "initialized", "config": sim_config.to_dict()}
         else:
-            raise HTTPException(status_code=500, detail="Failed to initialize simulation")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to initialize simulation"
+            )
             
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Don't leak internal error details in production
+        error_detail = str(e) if ENVIRONMENT != "production" else "Internal server error"
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
+        )
 
 
 @app.post("/simulation/control")
@@ -639,10 +715,12 @@ async def get_cultural_divergence():
 # Error handlers
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    """Global exception handler."""
+    """Global exception handler with security-aware error messages."""
+    # Don't leak internal error details in production
+    error_detail = str(exc) if ENVIRONMENT != "production" else "Internal server error"
     return JSONResponse(
-        status_code=500,
-        content={"detail": f"Internal server error: {str(exc)}"}
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": error_detail}
     )
 
 
