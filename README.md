@@ -433,9 +433,14 @@ cognisphere/
 
 **Frontend (GitHub Pages)**: [https://zaydbashir.github.io/the-cognisphere](https://zaydbashir.github.io/the-cognisphere)
 
-**Backend (Render)**: [https://cognisphere-backend.onrender.com](https://cognisphere-backend.onrender.com)
+**Backend (Render)**: ⚠️ **Not yet connected** - See [RENDER_SETUP_CHECKLIST.md](./RENDER_SETUP_CHECKLIST.md) for setup instructions
 
-**API Documentation**: [https://cognisphere-backend.onrender.com/docs](https://cognisphere-backend.onrender.com/docs)
+**Status**: 
+- ✅ Configuration files ready (`render.yaml`, deployment workflow)
+- ❌ Render service not created yet
+- ❌ GitHub secrets not configured
+
+**To connect**: Follow the [Render Setup Checklist](./RENDER_SETUP_CHECKLIST.md) to create the service and configure deployment.
 
 ### Docker Images
 
