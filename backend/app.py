@@ -11,17 +11,13 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field, field_validator
 import uvicorn
 
 from simulation.engine import SimulationEngine, SimulationConfig, SimulationState
 from simulation.environmental_stimuli import StimulusType
 from adapters import LLMMode
-
-
-# Security
-security = HTTPBearer(auto_error=False)
+from auth import verify_api_key, get_auth_status
 
 # Environment-based configuration
 ALLOWED_ORIGINS = os.getenv(
@@ -164,9 +160,19 @@ async def root():
     }
 
 
+# Authentication status endpoint
+@app.get("/auth/status")
+async def auth_status():
+    """Get authentication status and configuration."""
+    return get_auth_status()
+
+
 # Simulation control endpoints
 @app.post("/simulation/initialize")
-async def initialize_simulation(config: SimulationConfigRequest):
+async def initialize_simulation(
+    config: SimulationConfigRequest,
+    authenticated: bool = Security(verify_api_key)
+):
     """
     Initialize a new simulation with the given configuration.
     
@@ -231,7 +237,10 @@ async def initialize_simulation(config: SimulationConfigRequest):
 
 
 @app.post("/simulation/control")
-async def control_simulation(request: SimulationControlRequest):
+async def control_simulation(
+    request: SimulationControlRequest,
+    authenticated: bool = Security(verify_api_key)
+):
     """Control simulation execution (start, pause, resume, stop, step)."""
     global simulation_engine
     
@@ -385,7 +394,10 @@ async def get_world_summary():
 
 # Snapshot endpoints
 @app.post("/snapshots")
-async def take_snapshot(request: SnapshotRequest):
+async def take_snapshot(
+    request: SnapshotRequest,
+    authenticated: bool = Security(verify_api_key)
+):
     """Take a snapshot of the current simulation state."""
     global simulation_engine
     
@@ -415,7 +427,10 @@ async def list_snapshots():
 
 
 @app.post("/snapshots/load")
-async def load_snapshot(snapshot_file: str):
+async def load_snapshot(
+    snapshot_file: str,
+    authenticated: bool = Security(verify_api_key)
+):
     """Load a snapshot and restore simulation state."""
     global simulation_engine
     
@@ -558,7 +573,9 @@ async def get_config():
 
 
 @app.post("/reset")
-async def reset_simulation():
+async def reset_simulation(
+    authenticated: bool = Security(verify_api_key)
+):
     """Reset the simulation to initial state."""
     global simulation_engine
     
@@ -672,7 +689,9 @@ async def get_stimuli_by_type(stimulus_type: str):
 
 
 @app.post("/stimuli/fetch")
-async def fetch_stimuli():
+async def fetch_stimuli(
+    authenticated: bool = Security(verify_api_key)
+):
     """Manually trigger fetching of environmental stimuli."""
     try:
         if not simulation_engine or not simulation_engine.stimuli_manager:

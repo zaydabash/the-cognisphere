@@ -313,6 +313,32 @@ python scripts/seed_and_run.py --preset lab --ticks 300
 python scripts/seed_and_run.py --seed 42 --ticks 100
 ```
 
+## Production Deployment
+
+### Quick Setup
+
+1. **Backend (Render.com)**:
+   - Set `ENVIRONMENT=production`
+   - Set `CORS_ORIGINS` to your frontend URLs
+   - Optionally enable authentication with `API_KEY` and `REQUIRE_AUTH=true`
+
+2. **Frontend (GitHub Pages)**:
+   - Set `VITE_API_URL` to your backend URL
+   - HTTPS is automatically enabled
+
+See [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md) for detailed instructions.
+
+### Environment Variables
+
+**Backend**:
+- `ENVIRONMENT=production` - Enables production mode
+- `CORS_ORIGINS` - Comma-separated list of allowed origins
+- `API_KEY` - API key for authentication (optional)
+- `REQUIRE_AUTH` - Enable/disable authentication
+
+**Frontend**:
+- `VITE_API_URL` - Backend API URL
+
 ## Security
 
 ### Security Features
