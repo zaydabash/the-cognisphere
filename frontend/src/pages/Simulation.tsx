@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Play, Pause, Square, RotateCcw, Activity, Clock, Users, Zap } from 'lucide-react'
 import { useSimulation } from '../state/SimulationContext'
+import { MetricStrip } from '../components/MetricStrip'
 
 const Simulation: React.FC = () => {
   const { state, controlSimulation, startRealTimeUpdates, stopRealTimeUpdates } = useSimulation()
@@ -41,76 +42,43 @@ const Simulation: React.FC = () => {
         </div>
       </div>
 
-      {/* Status Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="card p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Simulation Status</h2>
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-            isRunning 
-              ? 'bg-green-500/20 text-green-400' 
-              : isPaused
-              ? 'bg-yellow-500/20 text-yellow-400'
-              : 'bg-gray-500/20 text-gray-400'
-          }`}>
-            {isRunning && <Activity className="w-4 h-4 inline mr-1" />}
+      {/* Status */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-secondary-200">
+            Simulation Status
+          </h2>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+              isRunning
+                ? 'bg-accent-500/15 text-accent-300'
+                : isPaused
+                ? 'bg-primary-500/15 text-primary-300'
+                : 'bg-secondary-700/50 text-secondary-400'
+            }`}
+          >
+            {isRunning && <Activity className="h-3 w-3" />}
             {state.status?.state || 'Stopped'}
-          </div>
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary-500/10 rounded-lg">
-              <Clock className="w-5 h-5 text-primary-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Current Tick</p>
-              <p className="text-lg font-semibold text-white">
-                {state.status?.current_tick || 0}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <Users className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Active Agents</p>
-              <p className="text-lg font-semibold text-white">
-                {state.status?.realtime?.agent_count || state.agents.length}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <Zap className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Active Events</p>
-              <p className="text-lg font-semibold text-white">
-                {state.status?.realtime?.active_events || 0}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Activity className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Duration</p>
-              <p className="text-lg font-semibold text-white">
-                {state.status?.duration ? `${state.status.duration.toFixed(1)}s` : 'N/A'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+        <MetricStrip
+          metrics={[
+            { label: 'Current Tick', value: state.status?.current_tick ?? 0, icon: Clock },
+            {
+              label: 'Active Agents',
+              value: state.status?.realtime?.agent_count ?? state.agents.length,
+              icon: Users,
+            },
+            { label: 'Active Events', value: state.status?.realtime?.active_events ?? 0, icon: Zap },
+            {
+              label: 'Duration',
+              value: state.status?.duration ? `${state.status.duration.toFixed(1)}s` : '—',
+              icon: Activity,
+            },
+          ]}
+        />
+      </div>
 
       {/* Control Panel */}
       <motion.div

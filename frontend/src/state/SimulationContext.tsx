@@ -80,6 +80,14 @@ export interface SimulationStatus {
     myth_count: number
     norm_count: number
     trade_count: number
+    gini_coefficient: number
+    alliance_count: number
+    betrayal_count: number
+    institution_count: number
+    avg_reputation: number
+    negotiations_successful: number
+    market_clearings: number
+    world_memories: number
   }
 }
 
@@ -324,11 +332,12 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Cleanup on unmount
+  // Cleanup on unmount (run once)
   useEffect(() => {
     return () => {
       stopRealTimeUpdates()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Initial data fetch
@@ -354,6 +363,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 }
 
 // Hook to use simulation context
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSimulation() {
   const context = useContext(SimulationContext)
   if (!context) {

@@ -1,29 +1,26 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Settings as SettingsIcon, Save, RotateCcw, Download, Upload } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useSimulation } from '../state/SimulationContext'
 
 const Settings: React.FC = () => {
-  const { state, refreshData } = useSimulation()
+  const { state } = useSimulation()
 
   const handleSaveSettings = () => {
-    // Implement settings save functionality
-    console.log('Saving settings...')
+    toast('Settings are applied per-run via the simulation config (not yet persisted).')
   }
 
   const handleResetSettings = () => {
-    // Implement settings reset functionality
-    console.log('Resetting settings...')
+    toast('Settings reset is not yet implemented.')
   }
 
   const handleExportData = () => {
-    // Implement data export functionality
-    console.log('Exporting data...')
+    toast('Data export is not yet implemented.')
   }
 
   const handleImportData = () => {
-    // Implement data import functionality
-    console.log('Importing data...')
+    toast('Data import is not yet implemented.')
   }
 
   return (
@@ -336,8 +333,7 @@ const Settings: React.FC = () => {
             <button
               onClick={() => {
                 if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-                  // Implement clear data functionality
-                  console.log('Clearing all data...')
+                  toast('Clear-all-data is not yet implemented.')
                 }
               }}
               className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-900/20 flex items-center space-x-2"

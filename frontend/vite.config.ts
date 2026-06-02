@@ -8,6 +8,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Allow Cloudflare quick-tunnel hosts (and any host) so the dev server can
+    // be exposed publicly for a shareable demo.
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:8000',

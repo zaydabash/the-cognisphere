@@ -1,8 +1,18 @@
 import axios from 'axios'
 
+// Resolve the API base URL.
+// - In development the Vite dev server proxies `/api/*` to the backend
+//   (stripping the `/api` prefix), so a relative base works.
+// - In a production build (e.g. GitHub Pages) there is no proxy, so point
+//   directly at the deployed backend via the build-time VITE_API_URL.
+const baseURL =
+  import.meta.env.PROD && import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : '/api'
+
 // Create axios instance with base configuration
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

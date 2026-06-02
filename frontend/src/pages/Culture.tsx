@@ -2,19 +2,15 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Globe, BookOpen, Users, TrendingUp, Clock, Star } from 'lucide-react'
 import { useSimulation } from '../state/SimulationContext'
-import mockData from '../data/mockData'
+import { MetricStrip } from '../components/MetricStrip'
 
 const Culture: React.FC = () => {
   const { state } = useSimulation()
-  
-  // Use mock data for screenshots
-  const useMockData = false
-  const data = useMockData ? mockData : state
 
-  const myths = useMockData ? data.culture.myths : (state.culturalData?.myths || [])
-  const norms = useMockData ? data.culture.norms : (state.culturalData?.norms || [])
-  const slang = useMockData ? data.culture.slang : (state.culturalData?.slang || [])
-  const timeline = useMockData ? [] : (state.culturalData?.timeline || [])
+  const myths = state.culturalData?.myths || []
+  const norms = state.culturalData?.norms || []
+  const slang = state.culturalData?.slang || []
+  const timeline = state.culturalData?.timeline || []
 
   return (
     <div className="space-y-6">
@@ -36,57 +32,13 @@ const Culture: React.FC = () => {
       </div>
 
       {/* Cultural Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-green-500/10 rounded-lg">
-              <BookOpen className="w-6 h-6 text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Total Myths</p>
-              <p className="text-2xl font-bold text-white">{myths.length}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-blue-500/10 rounded-lg">
-              <Users className="w-6 h-6 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Active Norms</p>
-              <p className="text-2xl font-bold text-white">{norms.length}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-purple-500/10 rounded-lg">
-              <Globe className="w-6 h-6 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Slang Terms</p>
-              <p className="text-2xl font-bold text-white">{slang.length}</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      <MetricStrip
+        metrics={[
+          { label: 'Total Myths', value: myths.length, icon: BookOpen },
+          { label: 'Active Norms', value: norms.length, icon: Users },
+          { label: 'Slang Terms', value: slang.length, icon: Globe },
+        ]}
+      />
 
       {/* Myths Section */}
       <motion.div

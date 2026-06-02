@@ -8,7 +8,6 @@ import {
   Brain, 
   Activity,
   RefreshCw,
-  Filter,
   BarChart3,
   Clock,
   Tag,
@@ -17,7 +16,7 @@ import {
   Heart
 } from 'lucide-react';
 import { apiClient } from '../api/client';
-import mockData from '../data/mockData';
+import { MetricStrip } from '../components/MetricStrip';
 
 interface EnvironmentalStimulus {
   id: string;
@@ -52,9 +51,6 @@ const EnvironmentalStimuliDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
   const [refreshing, setRefreshing] = useState(false);
-  
-  // Use mock data for screenshots
-  const useMockData = false;
 
   const stimulusTypes = [
     { value: 'all', label: 'All Types', icon: Globe, color: 'text-gray-500' },
@@ -74,24 +70,6 @@ const EnvironmentalStimuliDashboard: React.FC = () => {
   }, []);
 
   const fetchData = async () => {
-    if (useMockData) {
-      // Use mock data for screenshots
-      setStimuli(mockData.environmental_stimuli);
-      setStatus({
-        enabled: true,
-        active_stimuli_count: mockData.environmental_stimuli.length,
-        cultural_divergence: {
-          mirroring_factor: 0.7,
-          divergence_rate: 0.01,
-          reality_baseline: {},
-          active_stimuli_count: mockData.environmental_stimuli.length,
-          historical_stimuli_count: mockData.environmental_stimuli.length * 5
-        }
-      });
-      setLoading(false);
-      return;
-    }
-    
     try {
       setLoading(true);
       const [stimuliResponse, statusResponse] = await Promise.all([
@@ -185,47 +163,14 @@ const EnvironmentalStimuliDashboard: React.FC = () => {
 
       {/* Status Overview */}
       {status && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-secondary-800 p-4 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <Activity className="w-5 h-5 text-blue-500" />
-              <span className="text-sm text-secondary-300">Active Stimuli</span>
-            </div>
-            <div className="text-2xl font-bold text-white mt-2">
-              {status.active_stimuli_count}
-            </div>
-          </div>
-          
-          <div className="bg-secondary-800 p-4 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <Brain className="w-5 h-5 text-purple-500" />
-              <span className="text-sm text-secondary-300">Mirroring</span>
-            </div>
-            <div className="text-2xl font-bold text-white mt-2">
-              {(status.cultural_divergence.mirroring_factor * 100).toFixed(1)}%
-            </div>
-          </div>
-          
-          <div className="bg-secondary-800 p-4 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <Zap className="w-5 h-5 text-yellow-500" />
-              <span className="text-sm text-secondary-300">Divergence Rate</span>
-            </div>
-            <div className="text-2xl font-bold text-white mt-2">
-              {(status.cultural_divergence.divergence_rate * 100).toFixed(2)}%
-            </div>
-          </div>
-          
-          <div className="bg-secondary-800 p-4 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <BarChart3 className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-secondary-300">Historical</span>
-            </div>
-            <div className="text-2xl font-bold text-white mt-2">
-              {status.cultural_divergence.historical_stimuli_count}
-            </div>
-          </div>
-        </div>
+        <MetricStrip
+          metrics={[
+            { label: 'Active Stimuli', value: status.active_stimuli_count, icon: Activity },
+            { label: 'Mirroring', value: `${(status.cultural_divergence.mirroring_factor * 100).toFixed(1)}%`, icon: Brain },
+            { label: 'Divergence Rate', value: `${(status.cultural_divergence.divergence_rate * 100).toFixed(2)}%`, icon: Zap },
+            { label: 'Historical', value: status.cultural_divergence.historical_stimuli_count, icon: BarChart3 },
+          ]}
+        />
       )}
 
       {/* Cultural Divergence Analysis */}

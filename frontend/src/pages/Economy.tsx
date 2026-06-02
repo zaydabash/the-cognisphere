@@ -2,12 +2,14 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { BarChart3, TrendingUp, DollarSign, Activity, Zap, Users } from 'lucide-react'
 import { useSimulation } from '../state/SimulationContext'
+import { MetricStrip } from '../components/MetricStrip'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 const Economy: React.FC = () => {
   const { state } = useSimulation()
 
   const economicData = state.economicData
+  const realtime = state.status?.realtime
   const marketData = economicData?.market_summary
   const prices = marketData?.current_prices || {}
   const resources = marketData?.resources || {}
@@ -57,76 +59,14 @@ const Economy: React.FC = () => {
       </div>
 
       {/* Economic Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-green-500/10 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Active Trades</p>
-              <p className="text-2xl font-bold text-white">{marketData?.active_trades || 0}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-blue-500/10 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Completed Trades</p>
-              <p className="text-2xl font-bold text-white">{marketData?.completed_trades || 0}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-purple-500/10 rounded-lg">
-              <Zap className="w-6 h-6 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Active Events</p>
-              <p className="text-2xl font-bold text-white">{economicData?.active_events || 0}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-red-500/10 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-red-400" />
-            </div>
-            <div>
-              <p className="text-sm text-secondary-400">Gini Coefficient</p>
-              <p className="text-2xl font-bold text-white">
-                {economicData?.gini_coefficient?.toFixed(3) || '0.000'}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      <MetricStrip
+        metrics={[
+          { label: 'Total Trades', value: economicData?.total_trades ?? realtime?.trade_count ?? 0, icon: DollarSign },
+          { label: 'Market Clearings', value: realtime?.market_clearings ?? 0, icon: TrendingUp },
+          { label: 'Active Events', value: economicData?.active_events || 0, icon: Zap },
+          { label: 'Gini Coefficient', value: economicData?.gini_coefficient?.toFixed(3) || '0.000', icon: BarChart3 },
+        ]}
+      />
 
       {/* Price Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

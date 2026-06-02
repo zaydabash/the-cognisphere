@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { X, Brain, Settings, Play } from 'lucide-react'
 
 interface SimulationConfigProps {
@@ -23,7 +22,8 @@ const SimulationConfig: React.FC<SimulationConfigProps> = ({ onSubmit, onCancel,
     vector_backend: 'faiss',
     snapshot_frequency: 20,
     snapshot_directory: 'snapshots',
-    stimuli_file: ''
+    stimuli_file: '',
+    enable_environmental_stimuli: false,
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -283,6 +283,25 @@ const SimulationConfig: React.FC<SimulationConfigProps> = ({ onSubmit, onCancel,
                 placeholder="snapshots"
               />
             </div>
+          </div>
+
+          <div className="flex items-start justify-between rounded-lg border border-secondary-800 p-4">
+            <div className="pr-4">
+              <label htmlFor="enable-stimuli" className="block text-sm font-medium text-secondary-200">
+                Environmental Stimuli
+              </label>
+              <p className="text-xs text-secondary-400 mt-1">
+                Pull live real-world RSS data into the simulation. Non-deterministic —
+                leave off for reproducible seeded runs.
+              </p>
+            </div>
+            <input
+              id="enable-stimuli"
+              type="checkbox"
+              checked={config.enable_environmental_stimuli}
+              onChange={(e) => handleChange('enable_environmental_stimuli', e.target.checked)}
+              className="mt-1 h-5 w-5 rounded border-secondary-700 bg-secondary-800 text-primary-600"
+            />
           </div>
         </div>
 

@@ -1,19 +1,12 @@
 import React, { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Brain, 
-  Play, 
-  Pause, 
-  Square, 
-  Settings, 
-  BarChart3, 
-  Users, 
+import {
+  Play,
+  Settings,
+  BarChart3,
   Network,
   Globe,
-  Menu,
-  X,
-  Activity,
   Info,
   Zap
 } from 'lucide-react'

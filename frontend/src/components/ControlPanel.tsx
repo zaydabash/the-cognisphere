@@ -16,7 +16,7 @@ import { useSimulation } from '../state/SimulationContext'
 import SimulationConfig from './SimulationConfig'
 
 const ControlPanel: React.FC = () => {
-  const { state, controlSimulation, initializeSimulation, startRealTimeUpdates, stopRealTimeUpdates } = useSimulation()
+  const { state, controlSimulation, initializeSimulation, startRealTimeUpdates } = useSimulation()
   const [expanded, setExpanded] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
 
