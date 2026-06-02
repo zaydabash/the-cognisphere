@@ -6,11 +6,19 @@ Provides command-line interface for running simulations with different
 configurations and presets for testing and benchmarking.
 """
 
+import os
+import sys
+
+# Reproducibility: Python randomizes string hashing per-process (PYTHONHASHSEED),
+# which makes set/dict iteration order vary between runs. For deterministic
+# seeded simulations we pin the hash seed and re-exec once before doing any work.
+if os.environ.get("PYTHONHASHSEED") != "0":
+    os.environ["PYTHONHASHSEED"] = "0"
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
 import asyncio
 import argparse
 import json
-import os
-import sys
 import time
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -140,7 +148,19 @@ async def run_simulation(config: SimulationConfig, verbose: bool = False) -> Dic
     print(f"   Active norms: {len(engine.world.culture.active_norms)}")
     print(f"   Total trades: {len(engine.world.economy.trade_history)}")
     print(f"   Gini coefficient: {engine.world.economy.gini_coefficient:.3f}")
-    
+
+    # Social & negotiation dynamics
+    social = engine.world.social_engine.get_social_summary()
+    negotiation = engine.world.negotiation_engine.get_negotiation_summary()
+    memory = engine.world.memory_manager.get_memory_statistics()
+    print(f"   Alliances formed: {social['total_alliances']}")
+    print(f"   Betrayals: {social['total_betrayals']}")
+    print(f"   Institutions: {social['total_institutions']}")
+    print(f"   Avg reputation: {social['average_reputation']:.3f}")
+    print(f"   Negotiations (ok/total): {negotiation['successful_negotiations']}/{negotiation['completed_negotiations']}")
+    print(f"   Market clearings: {negotiation['market_clearings']}")
+    print(f"   World memories (graph+vector): {memory['total_memories']}")
+
     # Performance metrics
     if engine.scheduler:
         perf_stats = engine.scheduler.get_performance_stats()

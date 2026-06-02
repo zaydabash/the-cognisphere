@@ -5,21 +5,13 @@ This module provides both graph-based memory (using Neo4j or NetworkX)
 and vector-based semantic memory for agent reasoning and retrieval.
 """
 
-from .graph import MemoryGraph, MemoryNode, MemoryEdge
-from .vector import VectorMemory, FAISSVectorStore, VectorMemorySystem
-from .schemas import MemoryEvent, MemoryConcept, MemoryRelationship
-
-# Create a simple AgentMemory class for compatibility
-class AgentMemory:
-    """Simple agent memory for compatibility."""
-    def __init__(self, agent_id: str):
-        self.agent_id = agent_id
-        self.graph_memory = MemoryGraph()
-        self.vector_memory = FAISSVectorStore()
+from .graph import MemoryEdge, MemoryGraph, MemoryNode
+from .schemas import AgentMemory, MemoryConcept, MemoryEvent, MemoryRelationship
+from .vector import FAISSVectorStore, VectorMemory, VectorMemorySystem
 
 __all__ = [
     "MemoryGraph",
-    "MemoryNode", 
+    "MemoryNode",
     "MemoryEdge",
     "VectorMemory",
     "FAISSVectorStore",
@@ -27,5 +19,5 @@ __all__ = [
     "MemoryEvent",
     "MemoryConcept",
     "MemoryRelationship",
-    "AgentMemory"
+    "AgentMemory",
 ]
