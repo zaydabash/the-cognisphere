@@ -4,515 +4,364 @@
 [![Release](https://github.com/zaydabash/the-cognisphere/actions/workflows/release.yml/badge.svg)](https://github.com/zaydabash/the-cognisphere/actions/workflows/release.yml)
 [![Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-222)](https://github.com/zaydabash/the-cognisphere/deployments/activity_log?environment=github-pages)
 [![Backend](https://img.shields.io/badge/Deploy-Render-2b2b2b)](https://dashboard.render.com/)
-[![Containers](https://img.shields.io/badge/Containers-Docker%20Ready-blue)](https://github.com/zaydabash/the-cognisphere/pkgs/container/cognisphere)
 
 A living ecosystem of cognitive agents that evolve language, culture, alliances, and institutions through emergent dynamics.
 
 ## Architecture Overview
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        UI[React Dashboard]
-        VIZ[Real-time Visualization]
-        CTRL[Control Panel]
-    end
-    
-    subgraph "Backend Layer"
-        API[FastAPI Server]
-        SIM[Simulation Engine]
-        SCHED[Scheduler]
-    end
-    
-    subgraph "Agent System"
-        AGENTS[Cognitive Agents]
-        MEMORY[Memory Layer]
-        CULTURE[Cultural Evolution]
-        ECONOMY[Economic System]
-    end
-    
-    subgraph "Environmental Stimuli"
-        RSS[RSS Feeds]
-        NEWS[News APIs]
-        WEATHER[Weather Data]
-        SENTIMENT[Sentiment Analysis]
-    end
-    
-    subgraph "Data Storage"
-        GRAPH[Graph Database]
-        VECTOR[Vector Storage]
-        EVENTS[Event History]
-    end
-    
-    subgraph "Deployment"
-        PAGES[GitHub Pages]
-        RENDER[Render.com]
-        GHCR[GitHub Container Registry]
-    end
-    
-    UI --> API
-    VIZ --> API
-    CTRL --> API
-    
-    API --> SIM
-    SIM --> SCHED
-    SCHED --> AGENTS
-    
-    AGENTS --> MEMORY
-    AGENTS --> CULTURE
-    AGENTS --> ECONOMY
-    
-    MEMORY --> GRAPH
-    MEMORY --> VECTOR
-    SIM --> EVENTS
-    
-    RSS --> SENTIMENT
-    NEWS --> SENTIMENT
-    WEATHER --> SENTIMENT
-    SENTIMENT --> SIM
-    
-    API --> PAGES
-    API --> RENDER
-    SIM --> GHCR
+```
+Frontend (React + Vite)
+    React dashboard, live visualization, control panel
+        |
+        v
+Backend (FastAPI)
+    Simulation engine, scheduler, REST API
+        |
+        v
+Agent system
+    Cognitive agents, memory layer, cultural evolution, economy
+        |
+        v
+Storage
+    NetworkX or Neo4j graph, FAISS vectors, event history
 ```
 
-## Live Dashboard Screenshots
+The frontend talks to the FastAPI backend over REST. The backend drives the
+simulation engine, which steps the agent system every tick. Agent memory is
+held in an in process graph plus a vector store, with optional write through to
+Neo4j. Environmental stimuli (optional) feed real world signals into the
+simulation.
 
-### Main Dashboard
-The central command center showing real-time metrics and civilization overview:
+## Live Dashboard
 
-![Dashboard Main](docs/screenshots/dashboard-with-data.png)
+The dashboard shows real time metrics and a civilization overview.
 
-## Key Features Showcase
+![Dashboard](docs/screenshots/dashboard-with-data.png)
 
-### Environmental Stimuli Integration (opt-in)
-- **Real-world Data**: RSS feeds from BBC technology, science, and business sources
-- **Cultural Mirroring**: Agents reflect real-world events in their culture
-- **Divergence Evolution**: cultural drift creates a unique "future version" of civilization
-- **Sentiment Analysis**: Emotional impact processing of environmental events
+## Key Features
 
-> Environmental stimuli pull **live** network data and are therefore
-> non-deterministic. They are **disabled by default** so seeded runs stay
-> reproducible. Enable them per-simulation with
-> `enable_environmental_stimuli=true` (config) or the matching field on the
-> `/simulation/initialize` request.
+### Environmental Stimuli Integration (opt in)
 
-### Multi-Agent Intelligence
-- **Cognitive Architecture**: Each agent has unique personality traits (OCEAN model)
-- **Memory Systems**: Graph-based relationships + vector-based semantic memory
-- **Learning & Adaptation**: Agents adapt via evolving trust relationships and
-  experience-driven reflection (satisfaction tracks the emotional valence of
-  recalled memories); behaviour shifts with accumulated experience
-- **Social Dynamics**: Trust, betrayal, alliance formation, and faction creation
+- **Real world data**: RSS feeds from BBC technology, science, and business sources.
+- **Cultural mirroring**: agents reflect real world events in their culture.
+- **Divergence evolution**: cultural drift creates a unique "future version" of the civilization.
+- **Sentiment analysis**: emotional impact processing of environmental events.
 
-### Real-time Visualization
-- **Network Graphs**: Interactive agent relationship visualization
-- **Cultural Timeline**: Myth creation and norm evolution tracking
-- **Economic Charts**: Trade activity, resource distribution, wealth inequality
-- **Language Drift**: Slang evolution and communication pattern analysis
+> Environmental stimuli pull live network data and are therefore
+> nondeterministic. They are disabled by default so seeded runs stay
+> reproducible. Enable them per simulation with `enable_environmental_stimuli=true`
+> in the config, or the matching field on the `/simulation/initialize` request.
+
+### Multi Agent Intelligence
+
+- **Cognitive architecture**: each agent has a unique personality (OCEAN model).
+- **Memory systems**: graph based relationships plus vector based semantic memory.
+- **Learning and adaptation**: agents adapt through evolving trust relationships and
+  experience driven reflection (satisfaction tracks the emotional valence of
+  recalled memories), so behaviour shifts with accumulated experience.
+- **Social dynamics**: trust, betrayal, alliance formation, and faction creation.
+
+### Live Visualization
+
+- **Network graphs**: interactive agent relationship visualization.
+- **Cultural timeline**: myth creation and norm evolution tracking.
+- **Economic charts**: trade activity, resource distribution, wealth inequality.
+- **Language drift**: slang evolution and communication pattern analysis.
 
 ## About The Cognisphere
 
-The Cognisphere is an experimental simulation platform that explores emergent intelligence through multi-agent systems. It creates a digital civilization where hundreds to thousands of cognitive agents interact, learn, and evolve complex social structures without predetermined scripts.
+The Cognisphere is an experimental simulation platform that explores emergent
+intelligence through multiagent systems. It creates a digital civilization where
+hundreds of cognitive agents (presets scale up to about 1,000) interact, learn,
+and evolve complex social structures without predetermined scripts.
 
-### What Makes It Unique
+### What Makes It Different
 
-**Emergent Intelligence**: Unlike traditional simulations with hard-coded behaviors, The Cognisphere agents develop their own strategies, relationships, and cultural norms through interaction and experience.
+**Emergent intelligence**: unlike traditional simulations with hardcoded
+behaviour, Cognisphere agents develop their own strategies, relationships, and
+cultural norms through interaction and experience.
 
-**Cultural Evolution**: Agents create myths, develop slang, establish social norms, and form institutions that persist and evolve over time. Language itself drifts and mutates as agents communicate.
+**Cultural evolution**: agents create myths, develop slang, establish social
+norms, and form institutions that persist and evolve over time. Language itself
+drifts and mutates as agents communicate.
 
-**Economic Dynamics**: A fully functional economy emerges from agent interactions, including trade negotiations, resource management, market dynamics, and wealth distribution patterns.
+**Economic dynamics**: an economy emerges from agent interactions, including
+trade negotiations, resource management, market dynamics, and wealth
+distribution patterns.
 
-**Social Complexity**: Agents form alliances, betray each other, create factions, and build institutions. Trust relationships evolve based on past interactions and reputation.
+**Social complexity**: agents form alliances, betray each other, create
+factions, and build institutions. Trust relationships evolve based on past
+interactions and reputation.
 
-**Real-time Visualization**: Watch the civilization unfold through interactive network graphs, cultural timelines, economic indicators, and agent behavior patterns.
+**Live visualization**: watch the civilization unfold through interactive
+network graphs, cultural timelines, economic indicators, and agent behaviour.
 
 ### Core Concepts
 
-**Agent Personality**: Each agent has a unique personality profile (based on OCEAN traits) that influences their behavior, decision-making, and social interactions.
+**Agent personality**: each agent has a unique personality profile (based on
+OCEAN traits) that influences behaviour, decision making, and social interaction.
 
-**Memory Systems**: Agents maintain episodic memory (events), semantic memory (concepts), and social memory (relationships) using graph and vector databases.
+**Memory systems**: agents maintain episodic memory (events), semantic memory
+(concepts), and social memory (relationships) using graph and vector stores.
 
-**Cultural Transmission**: Ideas, myths, and norms spread through the population via social networks, creating cultural evolution patterns.
+**Cultural transmission**: ideas, myths, and norms spread through the population
+via social networks, creating cultural evolution patterns.
 
-**Economic Emergence**: Trade relationships, resource scarcity, and market dynamics emerge naturally from agent needs and interactions.
+**Economic emergence**: trade relationships, resource scarcity, and market
+dynamics emerge naturally from agent needs and interactions.
 
-**Institutional Formation**: Agents can create lasting institutions like councils, temples, and governance systems that persist beyond individual lifespans.
+**Institutional formation**: agents can create lasting institutions such as
+councils, temples, and governance systems that persist beyond individual agents.
 
 ### Applications
 
-**Research**: Study emergent behavior, cultural evolution, economic dynamics, and social network formation.
+**Research**: study emergent behaviour, cultural evolution, economic dynamics,
+and social network formation.
 
-**Education**: Understand complex systems, agent-based modeling, and emergent intelligence concepts.
+**Education**: understand complex systems, agent based modeling, and emergent
+intelligence concepts.
 
-**Entertainment**: Watch fascinating civilizations develop, collapse, and evolve in unexpected ways.
+**Entertainment**: watch civilizations develop, collapse, and evolve in
+unexpected ways.
 
-**AI Development**: Explore how simple rules can lead to complex, intelligent-seeming behaviors.
+**AI development**: explore how simple rules can lead to complex, intelligent
+seeming behaviour.
 
-### Technical Innovation
+### Technical Stack
 
-The Cognisphere combines cutting-edge technologies:
-- **Graph Databases** (Neo4j) for relationship modeling
-- **Vector Databases** (FAISS) for semantic memory
-- **Real-time Visualization** with interactive network graphs
-- **Scalable Architecture** supporting thousands of agents
-- **Deterministic Simulation** for reproducible research
-- **Live Dashboard** for real-time monitoring
+- **Graph store**: NetworkX in process, with optional write through to Neo4j.
+- **Vector store**: FAISS for semantic memory.
+- **Visualization**: interactive network graphs in the React dashboard.
+- **Scale**: hundreds of agents (up to about 1,000) on a laptop.
+- **Reproducibility**: deterministic seeded runs.
+- **Live dashboard** for real time monitoring.
 
 ## Overview
 
-The Cognisphere simulates a digital civilization with hundreds to thousands of lightweight cognitive agents who:
-- Evolve language, culture, alliances, norms, and mythology
-- Maintain collective memory over simulated decades
-- Negotiate, trade, betray, form factions, and build institutions
-- React to real-world environmental stimuli
-- Produce emergent structure without hard-coded scripts
+The Cognisphere simulates a digital civilization with hundreds of lightweight
+cognitive agents who:
 
-## Architecture
-
-```
-        
-   Frontend             Backend              Memory        
-   React + Vite     FastAPI          Neo4j + FAISS 
-   Visualization        Simulation           Graph + Vector
-        
-```
+- Evolve language, culture, alliances, norms, and mythology.
+- Maintain collective memory across many ticks.
+- Negotiate, trade, betray, form factions, and build institutions.
+- React to real world environmental stimuli (when enabled).
+- Produce emergent structure without hardcoded scripts.
 
 ## Quick Start
 
-### Option 1: Interactive Setup (Recommended)
-```bash
-# Clone and setup
-git clone <your-repo-url>
-cd the-cognisphere
+### Backend
 
-# Run the interactive quick-start script
-chmod +x scripts/quick-start.sh
-./scripts/quick-start.sh
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
-### Option 2: Direct Deployment
+### Frontend
+
 ```bash
-# Local Development (uses cognisphere.dev domain)
-chmod +x scripts/local-dev.sh
-./scripts/local-dev.sh
-
-# Docker Development (uses cognisphere.local domain)
-docker-compose -f docker/docker-compose.yml up --build
-
-# Production Deployment (uses cognisphere.local with SSL)
-chmod +x scripts/deploy.sh
-./scripts/deploy.sh
+cd frontend
+npm install
+npm run dev
 ```
 
-### Option 3: One-Command Docker
-```bash
-# Quick Docker setup
-docker-compose -f docker/docker-compose.yml up --build -d
+Then open the dashboard at the URL Vite prints (the app is served under the
+`/the-cognisphere/` base path).
 
-# Run a simulation
+### Run a simulation from the command line
+
+```bash
 python scripts/seed_and_run.py --preset lab --ticks 300 --seed 42
 ```
 
-## Access URLs (No Localhost Issues!)
+### Docker
 
-- **Frontend Dashboard**: `http://cognisphere.local:5173` or `https://cognisphere.local`
-- **API Documentation**: `http://cognisphere.local:8000/api/docs`
-- **Neo4j Browser**: `http://cognisphere.local:7474`
-- **Monitoring**: `http://cognisphere.local:3001` (Grafana)
+```bash
+docker-compose -f docker/docker-compose.yml up --build -d
+```
 
 ## Core Features
 
-### Agent Cognitive Architecture
-- Personality vectors (OCEAN-style)
-- Trust calculus and relationship weights
-- Ideology vectors for soft alignment
-- Language lexicons with drifting slang
-- Episodic, semantic, and social memory
-- Retrieval-augmented creation: agents recall recent episodic memories to shape
-  the myths and slang they generate, and reflect on memory valence to adapt
+### Agent cognitive architecture
 
-### Economy & Social Dynamics
-- Resource-based economy (food, energy, artifacts, influence)
-- Bilateral negotiation with alternating offers
-- Market fallback with double auction clearing
-- Alliance/betrayal mechanics with reputation systems
-- Faction dynamics and institution formation
+- Personality vectors (OCEAN style).
+- Trust calculus and relationship weights.
+- Ideology vectors for soft alignment.
+- Language lexicons with drifting slang.
+- Episodic, semantic, and social memory.
+- Retrieval augmented creation: agents recall recent episodic memories to shape
+  the myths and slang they generate, and reflect on memory valence to adapt.
 
-### Cultural Evolution
-- Language drift with slang mutation and JSD divergence tracking
-- Myth generation and canonization
-- Norm voting systems with soft penalties
-- Cultural diffusion via probabilistic slang adoption (contagion-style spread)
+### Economy and social dynamics
 
-### Memory Layer
-- In-memory NetworkX knowledge graph by default; **optional Neo4j write-through**
-  (`memory_backend=neo4j`) persists every memory node/edge to a Neo4j database
-  and falls back to NetworkX automatically if no server is reachable
-- FAISS vector store for semantic retrieval
-- Snapshot/rewind capability for time travel
-- Deterministic seeded runs for reproducibility (`PYTHONHASHSEED=0` is pinned by the CLI runner)
+- Resource based economy (food, energy, artifacts, influence).
+- Bilateral negotiation with alternating offers.
+- Market fallback with double auction clearing.
+- Alliance and betrayal mechanics with reputation tracking.
+- Faction dynamics and institution formation.
 
-## Dashboard Features
+### Cultural evolution
 
-- Real-time agent network visualization
-- Culture timeline with myths, slang, and norms
-- Resource and economy panels
-- Slang divergence plots
-- Simulation control with play/pause/seed
-- Snapshot playback capabilities
+- Language drift with slang mutation and Jensen Shannon divergence tracking.
+- Myth generation and canonization.
+- Norm voting systems with soft penalties.
+- Cultural diffusion via probabilistic slang adoption (contagion style spread).
 
-## Testing & Benchmarks
+### Memory layer
 
-### Test Coverage
+- In memory NetworkX knowledge graph by default. Optional Neo4j write through
+  (`memory_backend=neo4j`) persists every memory node and edge to a Neo4j
+  database, and falls back to NetworkX automatically if no server is reachable.
+- FAISS vector store for semantic retrieval.
+- Snapshot and rewind capability for time travel.
+- Deterministic seeded runs (`PYTHONHASHSEED=0` is pinned by the CLI runner).
 
-The Cognisphere ships a 91-test pytest suite (unit + integration) covering the agent, culture, economy, social, negotiation, memory, engine, and auth subsystems. Line coverage of the simulation and adapter code is currently **~62%** (enforced floor of 60% via `pytest.ini`):
+## Testing
+
+The Cognisphere ships a 94 test pytest suite (unit plus integration) covering
+the agent, culture, economy, social, negotiation, memory, engine, and auth
+subsystems. Line coverage of the simulation and adapter code is currently about
+62 percent, with an enforced floor of 60 percent in `pytest.ini`.
 
 ```bash
-# Run test suite with coverage
 cd backend
-python -m pytest --cov=simulation --cov=adapters --cov-report=term-missing --cov-report=html tests/
-
-# View coverage report
-open htmlcov/index.html
+python -m pytest
 ```
 
-**Test Coverage Details:**
-- **Unit Tests**: Agent behavior, culture evolution, economy dynamics
-- **Integration Tests**: Simulation engine, memory systems, API endpoints
-- **Performance Tests**: Benchmark simulations with 500+ agents
-- **Security Tests**: Input validation, path traversal prevention, CORS configuration
+The social engine, negotiation engine with double auction fallback, and the
+hybrid memory manager are wired into the tick loop and run on every simulation.
+Their activity (alliances, betrayals, institutions, reputation, negotiations,
+market clearings, world memories) is surfaced in `world.stats` and the
+`/simulation/status` response.
 
-**Coverage Targets (aspirational):**
-- Core simulation logic (agents, culture, economy, scheduler): raise toward 80%
-- API endpoints: add `app.py` to the coverage set and test the FastAPI routes
-- Memory graph/vector internals: still lightly tested at the unit level (the
-  hybrid store is exercised end-to-end through the engine integration tests)
-
-The social (`SocialEngine`), negotiation (`NegotiationEngine` + double-auction
-`MarketFallback`), and hybrid-memory (`MemoryManager`) subsystems are wired into
-the tick loop and run on every simulation. Their activity (alliances, betrayals,
-institutions, reputation, negotiations, market clearings, world memories) is
-surfaced in `world.stats` and the `/simulation/status` response.
-
-### Code Quality
-
-The project uses multiple linting and formatting tools:
+## Code Quality
 
 ```bash
-# Linting with flake8
-flake8 backend/
-
-# Type checking with mypy
-mypy backend/
-
-# Formatting with black
-black backend/
-
-# Import sorting with isort
-isort backend/
+cd backend
+black --line-length=100 .
+isort --profile=black .
+flake8 .
+mypy .
 ```
 
-**Quality Standards:**
-- **Black**: code is formatted (`black --line-length=100 backend/` — clean)
-- **isort**: imports sorted (`--profile=black` — clean)
-- **Flake8**: style + complexity checks pass cleanly (`flake8 backend/`, max-complexity 15)
-- **Pytest**: 94-test suite with coverage gate (60% floor, currently ~62%)
-- **Pre-commit**: hooks configured in `.pre-commit-config.yaml` (black, isort, flake8, hygiene)
-- **MyPy**: static type checking passes cleanly (`mypy backend/` — 0 errors
-  across 29 source files; config in `backend/mypy.ini`)
+- **Black**: code is formatted clean.
+- **isort**: imports sorted with the black profile.
+- **Flake8**: style and complexity checks pass clean.
+- **MyPy**: static type checking passes with zero errors across the source files.
+- **Pytest**: 94 test suite with a coverage gate (floor 60 percent, currently about 62 percent).
+- **Pre commit**: hooks configured in `.pre-commit-config.yaml` (black, isort, flake8, hygiene).
 
-### Performance Benchmarks
-
-```bash
-# Performance benchmark
-python scripts/seed_and_run.py --preset lab --ticks 300
-
-# Determinism check
-python scripts/seed_and_run.py --seed 42 --ticks 100
-```
-
-## Production Deployment
-
-### Quick Setup
-
-1. **Backend (Render.com)**:
-   - Set `ENVIRONMENT=production`
-   - Set `CORS_ORIGINS` to your frontend URLs
-   - Optionally enable authentication with `API_KEY` and `REQUIRE_AUTH=true`
-
-2. **Frontend (GitHub Pages)**:
-   - Set `VITE_API_URL` to your backend URL
-   - HTTPS is automatically enabled
-
-See [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md) for detailed instructions.
-
-### Environment Variables
-
-**Backend**:
-- `ENVIRONMENT=production` - Enables production mode
-- `CORS_ORIGINS` - Comma-separated list of allowed origins
-- `API_KEY` - API key for authentication (optional)
-- `REQUIRE_AUTH` - Enable/disable authentication
-
-**Frontend**:
-- `VITE_API_URL` - Backend API URL
-
-## Security
-
-### Security Features
-
-The Cognisphere implements comprehensive security measures:
-
-#### Input Validation
-- **Pydantic Models**: All API inputs validated with type checking and constraints
-- **Path Traversal Prevention**: Snapshot and file paths validated to prevent directory traversal attacks
-- **Action Validation**: Simulation actions validated against whitelist
-- **Range Validation**: All numeric inputs validated with min/max constraints
-
-#### CORS Configuration
-- **Environment-Based**: CORS origins restricted in production, open in development
-- **Configurable**: Set `CORS_ORIGINS` environment variable for production
-- **Secure Defaults**: Only allows specific HTTP methods (GET, POST, PUT, DELETE, OPTIONS)
-
-#### Error Handling
-- **Security-Aware**: Error messages don't leak internal details in production
-- **Proper HTTP Status Codes**: Uses appropriate status codes (400, 401, 403, 404, 500)
-- **Exception Handling**: Global exception handler prevents information disclosure
-
-#### Environment Variables
-- **No Hardcoded Secrets**: All sensitive data stored in environment variables
-- **`.env.example` Files**: Example files provided without actual secrets
-- **Gitignore Protection**: All `.env` files and secrets directories excluded from version control
-
-### Security Best Practices
-
-1. **Never commit secrets**: All `.env` files and secrets are in `.gitignore`
-2. **Use environment variables**: Store API keys, tokens, and credentials in environment variables
-3. **Restrict CORS in production**: Set `CORS_ORIGINS` environment variable for production deployment
-4. **Validate all inputs**: All API endpoints validate inputs with Pydantic models
-5. **Use HTTPS in production**: Always use HTTPS for production deployments
-6. **Regular updates**: Keep dependencies updated to patch security vulnerabilities
-
-### Security Audit
-
-The project has been audited for common security issues:
-
-- ✅ **No hardcoded credentials**: All secrets use environment variables
-- ✅ **No `eval()` or `exec()`**: No dangerous code execution patterns
-- ✅ **Input validation**: All inputs validated and sanitized
-- ✅ **Path traversal protection**: File paths validated to prevent attacks
-- ✅ **CORS configuration**: Properly configured for production
-- ✅ **Error handling**: Security-aware error messages
-- ✅ **Dependency security**: Regular dependency updates
-
-### Reporting Security Issues
-
-If you discover a security vulnerability, please report it responsibly:
-
-1. **Report privately** via the repository's **Security** tab → **"Report a
-   vulnerability"** (GitHub private vulnerability reporting).
-2. **Do not** open a public GitHub issue for security problems.
-3. **Include**: description, steps to reproduce, and potential impact.
-
-See [SECURITY.md](./SECURITY.md) for full details.
+Continuous integration runs all of the above on every push and pull request,
+plus a frontend type check, lint, and build.
 
 ## Configuration
 
-These are **simulation parameters**, set on the `SimulationConfig` object or via
-the `/simulation/initialize` API request (not environment variables — for those
-see [Environment Variables](#environment-variables) above):
+These are simulation parameters, set on the `SimulationConfig` object or via the
+`/simulation/initialize` API request. They are not environment variables.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `num_agents` | 300 | Number of agents in simulation |
+| `num_agents` | 300 | Number of agents in the simulation |
 | `seed` | 42 | Random seed for reproducibility |
 | `tick_duration_ms` | 100 | Milliseconds per simulation tick |
 | `llm_mode` | mock | LLM mode: `mock` or `openai` |
 | `memory_backend` | networkx | Memory backend: `networkx` or `neo4j` |
 | `vector_backend` | faiss | Vector backend: `faiss` or `chroma` |
-| `enable_environmental_stimuli` | false | Pull live RSS stimuli (non-deterministic) |
+| `enable_environmental_stimuli` | false | Pull live RSS stimuli (nondeterministic) |
 
 > Reproducibility note: the CLI runner (`scripts/seed_and_run.py`) pins
-> `PYTHONHASHSEED=0` so that seeded runs are bit-for-bit reproducible. Set the
+> `PYTHONHASHSEED=0` so that seeded runs are bit for bit reproducible. Set the
 > same environment variable when running the engine elsewhere if you need
 > identical results across processes.
+
+## Production Deployment
+
+### Backend (Render)
+
+- Set `ENVIRONMENT=production`.
+- Set `CORS_ORIGINS` to your frontend origin (for example `https://zaydabash.github.io`).
+- Optionally enable authentication with `API_KEY` and `REQUIRE_AUTH=true`.
+
+The repository includes `render.yaml` (a Render blueprint) and a backend
+Dockerfile that binds the platform provided `$PORT`.
+
+### Frontend (GitHub Pages)
+
+- The build bakes in `VITE_API_URL` (the deployed backend URL) so the static
+  site calls the backend instead of a relative path.
+- The `deploy-frontend.yml` workflow publishes the dashboard to GitHub Pages.
+
+See PRODUCTION_SETUP.md for detailed instructions.
+
+### Environment variables
+
+Backend:
+
+- `ENVIRONMENT`: set to `production` to enable production mode.
+- `CORS_ORIGINS`: comma separated list of allowed origins.
+- `API_KEY`: API key for authentication (optional).
+- `REQUIRE_AUTH`: enable or disable authentication.
+
+Frontend:
+
+- `VITE_API_URL`: backend API URL, baked into the build.
+
+## Security
+
+### Input validation
+
+- Pydantic models validate all API inputs with type checking and constraints.
+- Snapshot and file paths are validated to prevent directory traversal.
+- Simulation actions are validated against a whitelist.
+- Numeric inputs are validated with minimum and maximum constraints.
+
+### CORS
+
+- Origins are restricted in production and open in development.
+- Set the `CORS_ORIGINS` environment variable for production.
+- Only specific HTTP methods are allowed (GET, POST, PUT, DELETE, OPTIONS).
+
+### Error handling
+
+- Error messages do not leak internal details in production.
+- Appropriate HTTP status codes are used (400, 401, 403, 404, 500).
+- A global exception handler prevents information disclosure.
+
+### Secrets
+
+- No hardcoded secrets. Sensitive data lives in environment variables.
+- Example env files are provided without real secrets.
+- All `.env` files and secret directories are excluded from version control.
+
+### Reporting security issues
+
+1. Report privately via the repository Security tab, using "Report a
+   vulnerability" (GitHub private vulnerability reporting).
+2. Do not open a public issue for security problems.
+3. Include a description, steps to reproduce, and potential impact.
+
+See SECURITY.md for full details.
 
 ## Project Structure
 
 ```
 cognisphere/
- backend/           # FastAPI simulation engine
- frontend/          # React dashboard
- docker/            # Containerization
- scripts/           # Utilities and seeding
- data/              # Sample stimuli and configs
- README.md          # This file
+  backend/     FastAPI simulation engine
+  frontend/    React dashboard
+  docker/      Containerization
+  scripts/     Utilities and seeding
+  data/        Sample stimuli and configs
+  README.md    This file
 ```
 
-## Acceptance Criteria
+## Deployment Status
 
-- One-command startup with Docker Compose
-- Working dashboard with emergent myths, slang, alliances
-- Deterministic seeded runs
-- 500+ agent mock runs on laptop
-- Beautiful, clean architecture & documentation
+- Configuration files are ready (`render.yaml`, deployment workflows).
+- The Render service still needs to be created and connected.
+- GitHub repository variables and secrets still need to be configured.
 
-## Deployment
-
-### Live Deployment
-
-**Frontend (GitHub Pages)**: [https://zaydbashir.github.io/the-cognisphere](https://zaydbashir.github.io/the-cognisphere)
-
-**Backend (Render)**: ⚠️ **Not yet connected** - See [RENDER_SETUP_CHECKLIST.md](./RENDER_SETUP_CHECKLIST.md) for setup instructions
-
-**Status**: 
-- ✅ Configuration files ready (`render.yaml`, deployment workflow)
-- ❌ Render service not created yet
-- ❌ GitHub secrets not configured
-
-**To connect**: Follow the [Render Setup Checklist](./RENDER_SETUP_CHECKLIST.md) to create the service and configure deployment.
-
-### Docker Images
-
-Build the images locally with Docker Compose (no prebuilt images are published
-to a registry yet):
-
-```bash
-docker-compose -f docker/docker-compose.yml up --build -d
-```
-
-### Environment Configuration
-
-Copy the example environment files and configure:
-
-```bash
-# Backend
-cp backend/.env.example backend/.env
-
-# Frontend  
-cp frontend/.env.example frontend/.env.local
-```
-
-### Release Process
-
-1. **Tag a release**: `git tag v0.1.0 && git push origin v0.1.0`
-2. The `release.yml` workflow publishes a GitHub Release with notes.
-
-> Note: building and pushing container images to GHCR is not part of the active
-> release workflow. Build images locally with `docker-compose` (see below), or
-> add a `docker/build-push-action` step to `release.yml` to publish to GHCR.
-
-### CI/CD Pipeline
-
-- **Continuous Integration** (`ci.yml`): on every push and pull request to
-  `main` it lints and type-checks the backend (black, isort, flake8, mypy), runs
-  the full pytest suite with coverage, smoke-tests the simulation, and builds the
-  frontend.
-- **Frontend deploy** (`deploy-frontend.yml`): publishes the dashboard to GitHub Pages.
-- **Backend deploy** (`deploy-backend.yml`): triggers a Render deploy (requires
-  the Render service and secrets to be configured — see the deployment section).
+To connect the backend, follow RENDER_SETUP_CHECKLIST.md.
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License. See the LICENSE file for details.

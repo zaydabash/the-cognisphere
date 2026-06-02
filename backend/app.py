@@ -254,7 +254,7 @@ async def control_simulation(
         action = request.action.lower()
 
         if action == "start":
-            # Already running — nothing to do.
+            # Already running, nothing to do.
             if simulation_engine.state == SimulationState.RUNNING:
                 return {"status": "running"}
 

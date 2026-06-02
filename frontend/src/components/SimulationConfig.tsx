@@ -291,8 +291,8 @@ const SimulationConfig: React.FC<SimulationConfigProps> = ({ onSubmit, onCancel,
                 Environmental Stimuli
               </label>
               <p className="text-xs text-secondary-400 mt-1">
-                Pull live real-world RSS data into the simulation. Non-deterministic —
-                leave off for reproducible seeded runs.
+                Pull live real world RSS data into the simulation. Nondeterministic,
+                so leave it off for reproducible seeded runs.
               </p>
             </div>
             <input

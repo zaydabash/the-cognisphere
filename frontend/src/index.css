@@ -28,7 +28,7 @@
     @apply border-secondary-800;
   }
 
-  /* Metric numerals: monospace, tabular, tight — telemetry feel. */
+  /* Metric numerals: monospace, tabular, tight. */
   .tabular {
     font-feature-settings: "tnum" 1, "cv01" 1;
     font-variant-numeric: tabular-nums;

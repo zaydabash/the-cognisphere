@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
   const isRunning = state.status?.state === 'running'
   const currentTick = realtime?.current_tick ?? 0
 
-  // Headline metrics — the four numbers you watch.
+  // Headline metrics: the four numbers you watch.
   const headline = [
     { name: 'Agents', value: realtime?.agent_count ?? state.agents.length, icon: Users },
     { name: 'Trades', value: realtime?.trade_count ?? 0, icon: ArrowLeftRight },
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
               ))
             ) : (
               <p className="bg-secondary-900/60 px-3 py-4 text-sm text-secondary-500">
-                No myths yet — start a simulation.
+                No myths yet. Start a simulation.
               </p>
             )}
           </div>

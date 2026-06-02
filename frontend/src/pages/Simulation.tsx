@@ -73,7 +73,7 @@ const Simulation: React.FC = () => {
             { label: 'Active Events', value: state.status?.realtime?.active_events ?? 0, icon: Zap },
             {
               label: 'Duration',
-              value: state.status?.duration ? `${state.status.duration.toFixed(1)}s` : '—',
+              value: state.status?.duration ? `${state.status.duration.toFixed(1)}s` : 'n/a',
               icon: Activity,
             },
           ]}
