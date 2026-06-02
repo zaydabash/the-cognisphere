@@ -8,23 +8,24 @@ and real-time visualization of emergent civilization dynamics.
 import asyncio
 import os
 from typing import Optional
-from fastapi import FastAPI, HTTPException, status
+
+import uvicorn
+from fastapi import FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-import uvicorn
 
-from simulation.engine import SimulationEngine, SimulationConfig, SimulationState
-from simulation.environmental_stimuli import StimulusType
 from adapters import LLMMode
-from auth import verify_api_key, get_auth_status
+from auth import get_auth_status, verify_api_key
+from simulation.engine import SimulationConfig, SimulationEngine, SimulationState
+from simulation.environmental_stimuli import StimulusType
 
 # Environment-based configuration
 ALLOWED_ORIGINS = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,http://localhost:5174"
+    "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173,http://localhost:5174"
 ).split(",")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
 
 # Request/Response models with validation
 class SimulationConfigRequest(BaseModel):
@@ -36,13 +37,22 @@ class SimulationConfigRequest(BaseModel):
     llm_temperature: float = Field(default=0.3, ge=0.0, le=2.0, description="LLM temperature")
     tick_duration_ms: int = Field(default=100, ge=1, le=10000, description="Tick duration in ms")
     agents_per_tick: int = Field(default=50, ge=1, le=1000, description="Agents processed per tick")
-    interactions_per_tick: int = Field(default=100, ge=1, le=10000, description="Interactions per tick")
+    interactions_per_tick: int = Field(
+        default=100, ge=1, le=10000, description="Interactions per tick"
+    )
     memory_backend: str = Field(default="networkx", description="Memory backend")
     vector_backend: str = Field(default="faiss", description="Vector backend")
     snapshot_frequency: int = Field(default=20, ge=1, le=1000, description="Snapshot frequency")
-    snapshot_directory: str = Field(default="snapshots", max_length=200, description="Snapshot directory")
-    stimuli_file: Optional[str] = Field(default=None, max_length=500, description="Stimuli file path")
-    
+    snapshot_directory: str = Field(
+        default="snapshots", max_length=200, description="Snapshot directory"
+    )
+    stimuli_file: Optional[str] = Field(
+        default=None, max_length=500, description="Stimuli file path"
+    )
+    enable_environmental_stimuli: bool = Field(
+        default=False, description="Enable live environmental stimuli (non-deterministic)"
+    )
+
     @field_validator("snapshot_directory")
     @classmethod
     def validate_snapshot_directory(cls, v):
@@ -50,7 +60,7 @@ class SimulationConfigRequest(BaseModel):
         if ".." in v or v.startswith("/"):
             raise ValueError("Invalid snapshot directory path")
         return v
-    
+
     @field_validator("stimuli_file")
     @classmethod
     def validate_stimuli_file(cls, v):
@@ -62,7 +72,7 @@ class SimulationConfigRequest(BaseModel):
 
 class SimulationControlRequest(BaseModel):
     action: str = Field(..., description="Action to perform")
-    
+
     @field_validator("action")
     @classmethod
     def validate_action(cls, v):
@@ -75,7 +85,7 @@ class SimulationControlRequest(BaseModel):
 
 class SnapshotRequest(BaseModel):
     name: Optional[str] = Field(default=None, max_length=100, description="Snapshot name")
-    
+
     @field_validator("name")
     @classmethod
     def validate_name(cls, v):
@@ -92,7 +102,7 @@ simulation_engine: Optional[SimulationEngine] = None
 app = FastAPI(
     title="The Cognisphere API",
     description="API for emergent intelligence civilization simulation",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 # Add CORS middleware with environment-based configuration
@@ -123,7 +133,6 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""
-    global simulation_engine
     if simulation_engine:
         simulation_engine.cleanup()
         print("Simulation engine cleaned up")
@@ -135,10 +144,12 @@ async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z"}
 
+
 @app.get("/healthz")
 async def healthz():
     """Kubernetes-style health check endpoint."""
     return {"ok": True}
+
 
 @app.get("/")
 async def root():
@@ -155,8 +166,8 @@ async def root():
             "simulation": "/simulation",
             "agents": "/agents",
             "culture": "/culture",
-            "economy": "/economy"
-        }
+            "economy": "/economy",
+        },
     }
 
 
@@ -170,16 +181,15 @@ async def auth_status():
 # Simulation control endpoints
 @app.post("/simulation/initialize")
 async def initialize_simulation(
-    config: SimulationConfigRequest,
-    authenticated: bool = Security(verify_api_key)
+    config: SimulationConfigRequest, authenticated: bool = Security(verify_api_key)
 ):
     """
     Initialize a new simulation with the given configuration.
-    
+
     Validates input and creates a new simulation engine instance.
     """
     global simulation_engine
-    
+
     try:
         # Validate LLM mode
         try:
@@ -187,9 +197,9 @@ async def initialize_simulation(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid LLM mode: {config.llm_mode}"
+                detail=f"Invalid LLM mode: {config.llm_mode}",
             )
-        
+
         # Convert request to config
         sim_config = SimulationConfig(
             num_agents=config.num_agents,
@@ -205,78 +215,80 @@ async def initialize_simulation(
             vector_backend=config.vector_backend,
             snapshot_frequency=config.snapshot_frequency,
             snapshot_directory=config.snapshot_directory,
-            stimuli_file=config.stimuli_file
+            stimuli_file=config.stimuli_file,
+            enable_environmental_stimuli=config.enable_environmental_stimuli,
         )
-        
+
         # Create new simulation engine
         simulation_engine = SimulationEngine(sim_config)
         success = await simulation_engine.initialize()
-        
+
         if success:
             return {"status": "initialized", "config": sim_config.to_dict()}
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to initialize simulation"
+                detail="Failed to initialize simulation",
             )
-            
+
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         # Don't leak internal error details in production
         error_detail = str(e) if ENVIRONMENT != "production" else "Internal server error"
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=error_detail
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail)
 
 
 @app.post("/simulation/control")
 async def control_simulation(
-    request: SimulationControlRequest,
-    authenticated: bool = Security(verify_api_key)
+    request: SimulationControlRequest, authenticated: bool = Security(verify_api_key)
 ):
     """Control simulation execution (start, pause, resume, stop, step)."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         action = request.action.lower()
-        
+
         if action == "start":
-            if simulation_engine.state == SimulationState.READY:
-                # Start simulation in background
-                asyncio.create_task(simulation_engine.run_simulation())
-                return {"status": "started"}
-            else:
-                raise HTTPException(status_code=400, detail="Simulation not ready")
-        
+            # Already running — nothing to do.
+            if simulation_engine.state == SimulationState.RUNNING:
+                return {"status": "running"}
+
+            # Auto-(re)initialize so Start works from any state: a fresh server
+            # (uninitialized), or after a previous run finished (stopped /
+            # errored). This rebuilds a clean world from the engine's config.
+            if simulation_engine.state != SimulationState.READY:
+                initialized = await simulation_engine.initialize()
+                if not initialized:
+                    raise HTTPException(status_code=500, detail="Failed to initialize simulation")
+
+            # Run in the background so the request returns immediately.
+            asyncio.create_task(simulation_engine.run_simulation())
+            return {"status": "started"}
+
         elif action == "pause":
             await simulation_engine.pause_simulation()
             return {"status": "paused"}
-        
+
         elif action == "resume":
             await simulation_engine.resume_simulation()
             return {"status": "resumed"}
-        
+
         elif action == "stop":
             await simulation_engine.stop_simulation()
             return {"status": "stopped"}
-        
+
         elif action == "step":
             await simulation_engine.step_simulation()
             return {"status": "stepped"}
-        
+
         else:
             raise HTTPException(status_code=400, detail=f"Unknown action: {action}")
-            
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -284,11 +296,10 @@ async def control_simulation(
 @app.get("/simulation/status")
 async def get_simulation_status():
     """Get current simulation status."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         return {"status": "not_initialized"}
-    
+
     try:
         status = await simulation_engine.get_simulation_status()
         return status
@@ -300,11 +311,10 @@ async def get_simulation_status():
 @app.get("/agents")
 async def get_agents(agent_id: Optional[str] = None):
     """Get agent data."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         data = await simulation_engine.get_agent_data(agent_id)
         return data
@@ -315,11 +325,10 @@ async def get_agents(agent_id: Optional[str] = None):
 @app.get("/agents/{agent_id}")
 async def get_agent(agent_id: str):
     """Get specific agent data."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         data = await simulation_engine.get_agent_data(agent_id)
         if not data:
@@ -332,11 +341,10 @@ async def get_agent(agent_id: str):
 @app.get("/culture")
 async def get_cultural_data():
     """Get cultural data (myths, norms, slang)."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         data = await simulation_engine.get_cultural_data()
         return data
@@ -347,11 +355,10 @@ async def get_cultural_data():
 @app.get("/economy")
 async def get_economic_data():
     """Get economic data."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         data = await simulation_engine.get_economic_data()
         return data
@@ -362,11 +369,10 @@ async def get_economic_data():
 @app.get("/network")
 async def get_network_data():
     """Get agent network data for visualization."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         data = await simulation_engine.get_network_data()
         return data
@@ -377,11 +383,10 @@ async def get_network_data():
 @app.get("/world")
 async def get_world_summary():
     """Get comprehensive world summary."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         if simulation_engine.world:
             summary = simulation_engine.world.get_world_summary()
@@ -394,16 +399,12 @@ async def get_world_summary():
 
 # Snapshot endpoints
 @app.post("/snapshots")
-async def take_snapshot(
-    request: SnapshotRequest,
-    authenticated: bool = Security(verify_api_key)
-):
+async def take_snapshot(request: SnapshotRequest, authenticated: bool = Security(verify_api_key)):
     """Take a snapshot of the current simulation state."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         snapshot_file = await simulation_engine.take_snapshot(request.name)
         return {"status": "snapshot_created", "file": snapshot_file}
@@ -414,29 +415,29 @@ async def take_snapshot(
 @app.get("/snapshots")
 async def list_snapshots():
     """List available snapshots."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         snapshots = simulation_engine.snapshots
-        return {"snapshots": [{"name": s["name"], "tick": s["tick"], "timestamp": s["timestamp"]} for s in snapshots]}
+        return {
+            "snapshots": [
+                {"name": s["name"], "tick": s["tick"], "timestamp": s["timestamp"]}
+                for s in snapshots
+            ]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/snapshots/load")
-async def load_snapshot(
-    snapshot_file: str,
-    authenticated: bool = Security(verify_api_key)
-):
+async def load_snapshot(snapshot_file: str, authenticated: bool = Security(verify_api_key)):
     """Load a snapshot and restore simulation state."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         success = await simulation_engine.load_snapshot(snapshot_file)
         if success:
@@ -451,26 +452,37 @@ async def load_snapshot(
 @app.get("/realtime/status")
 async def get_realtime_status():
     """Get real-time simulation status for dashboard."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         return {"status": "not_initialized", "data": None}
-    
+
     try:
         status = await simulation_engine.get_simulation_status()
-        
+
         # Add real-time metrics
         if simulation_engine.world:
+            world = simulation_engine.world
+            stats = world.stats
             status["realtime"] = {
-                "current_tick": simulation_engine.world.current_tick,
-                "agent_count": len(simulation_engine.world.agents),
-                "faction_count": len(simulation_engine.world.factions),
-                "active_events": len(simulation_engine.world.event_system.active_events),
-                "myth_count": len(simulation_engine.world.culture.myths),
-                "norm_count": len(simulation_engine.world.culture.active_norms),
-                "trade_count": len(simulation_engine.world.economy.trade_history)
+                "current_tick": world.current_tick,
+                "agent_count": len(world.agents),
+                "faction_count": len(world.factions),
+                "active_events": len(world.event_system.active_events),
+                "myth_count": len(world.culture.myths),
+                "norm_count": len(world.culture.active_norms),
+                "trade_count": len(world.economy.trade_history),
+                "gini_coefficient": world.economy.gini_coefficient,
+                # Social dynamics
+                "alliance_count": stats.get("total_alliances", 0),
+                "betrayal_count": stats.get("total_betrayals", 0),
+                "institution_count": stats.get("total_institutions", 0),
+                "avg_reputation": stats.get("avg_reputation", 0.0),
+                # Negotiation + hybrid memory
+                "negotiations_successful": stats.get("negotiations_successful", 0),
+                "market_clearings": stats.get("market_clearings", 0),
+                "world_memories": stats.get("world_memories", 0),
             }
-        
+
         return status
     except Exception as e:
         return {"status": "error", "error": str(e)}
@@ -479,11 +491,10 @@ async def get_realtime_status():
 @app.get("/realtime/network")
 async def get_realtime_network():
     """Get real-time network data for visualization."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         return {"nodes": [], "edges": []}
-    
+
     try:
         data = await simulation_engine.get_network_data()
         return data
@@ -494,11 +505,10 @@ async def get_realtime_network():
 @app.get("/realtime/culture")
 async def get_realtime_culture():
     """Get real-time cultural data."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         return {"myths": [], "norms": [], "slang": []}
-    
+
     try:
         data = await simulation_engine.get_cultural_data()
         return data
@@ -509,11 +519,10 @@ async def get_realtime_culture():
 @app.get("/realtime/economy")
 async def get_realtime_economy():
     """Get real-time economic data."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         return {"market": {}, "gini_coefficient": 0.0}
-    
+
     try:
         data = await simulation_engine.get_economic_data()
         return data
@@ -525,11 +534,10 @@ async def get_realtime_economy():
 @app.get("/stats/performance")
 async def get_performance_stats():
     """Get simulation performance statistics."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         if simulation_engine.scheduler:
             stats = simulation_engine.scheduler.get_performance_stats()
@@ -543,11 +551,10 @@ async def get_performance_stats():
 @app.get("/stats/history")
 async def get_simulation_history():
     """Get simulation tick history."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         if simulation_engine.world and simulation_engine.world.tick_history:
             return {"history": simulation_engine.world.tick_history}
@@ -561,11 +568,10 @@ async def get_simulation_history():
 @app.get("/config")
 async def get_config():
     """Get current simulation configuration."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         return {"config": simulation_engine.config.to_dict()}
     except Exception as e:
@@ -573,22 +579,19 @@ async def get_config():
 
 
 @app.post("/reset")
-async def reset_simulation(
-    authenticated: bool = Security(verify_api_key)
-):
+async def reset_simulation(authenticated: bool = Security(verify_api_key)):
     """Reset the simulation to initial state."""
-    global simulation_engine
-    
+
     if not simulation_engine:
         raise HTTPException(status_code=400, detail="Simulation not initialized")
-    
+
     try:
         # Stop current simulation
         await simulation_engine.stop_simulation()
-        
+
         # Reinitialize
         success = await simulation_engine.initialize()
-        
+
         if success:
             return {"status": "reset_complete"}
         else:
@@ -604,7 +607,7 @@ async def get_stimuli_status():
     try:
         if not simulation_engine:
             raise HTTPException(status_code=404, detail="No active simulation")
-        
+
         status = simulation_engine.get_environmental_stimuli_status()
         return status
     except Exception as e:
@@ -617,31 +620,32 @@ async def get_active_stimuli():
     try:
         if not simulation_engine or not simulation_engine.stimuli_manager:
             raise HTTPException(status_code=404, detail="No active simulation or stimuli manager")
-        
+
         stimuli = simulation_engine.stimuli_manager.get_active_stimuli()
-        
+
         # Convert to JSON-serializable format
         stimuli_data = []
         for stimulus in stimuli:
-            stimuli_data.append({
-                "id": stimulus.id,
-                "type": stimulus.stimulus_type.value,
-                "title": stimulus.title,
-                "content": stimulus.content[:200] + "..." if len(stimulus.content) > 200 else stimulus.content,
-                "source": stimulus.source,
-                "timestamp": stimulus.timestamp.isoformat(),
-                "intensity": stimulus.intensity.value,
-                "sentiment": stimulus.sentiment,
-                "keywords": stimulus.keywords,
-                "cultural_impact": stimulus.cultural_impact,
-                "economic_impact": stimulus.economic_impact,
-                "social_impact": stimulus.social_impact
-            })
-        
-        return {
-            "count": len(stimuli_data),
-            "stimuli": stimuli_data
-        }
+            stimuli_data.append(
+                {
+                    "id": stimulus.id,
+                    "type": stimulus.stimulus_type.value,
+                    "title": stimulus.title,
+                    "content": stimulus.content[:200] + "..."
+                    if len(stimulus.content) > 200
+                    else stimulus.content,
+                    "source": stimulus.source,
+                    "timestamp": stimulus.timestamp.isoformat(),
+                    "intensity": stimulus.intensity.value,
+                    "sentiment": stimulus.sentiment,
+                    "keywords": stimulus.keywords,
+                    "cultural_impact": stimulus.cultural_impact,
+                    "economic_impact": stimulus.economic_impact,
+                    "social_impact": stimulus.social_impact,
+                }
+            )
+
+        return {"count": len(stimuli_data), "stimuli": stimuli_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -652,58 +656,56 @@ async def get_stimuli_by_type(stimulus_type: str):
     try:
         if not simulation_engine or not simulation_engine.stimuli_manager:
             raise HTTPException(status_code=404, detail="No active simulation or stimuli manager")
-        
+
         # Validate stimulus type
         try:
             stimulus_type_enum = StimulusType(stimulus_type)
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid stimulus type: {stimulus_type}")
-        
+
         stimuli = simulation_engine.stimuli_manager.get_stimuli_by_type(stimulus_type_enum)
-        
+
         # Convert to JSON-serializable format
         stimuli_data = []
         for stimulus in stimuli:
-            stimuli_data.append({
-                "id": stimulus.id,
-                "type": stimulus.stimulus_type.value,
-                "title": stimulus.title,
-                "content": stimulus.content[:200] + "..." if len(stimulus.content) > 200 else stimulus.content,
-                "source": stimulus.source,
-                "timestamp": stimulus.timestamp.isoformat(),
-                "intensity": stimulus.intensity.value,
-                "sentiment": stimulus.sentiment,
-                "keywords": stimulus.keywords,
-                "cultural_impact": stimulus.cultural_impact,
-                "economic_impact": stimulus.economic_impact,
-                "social_impact": stimulus.social_impact
-            })
-        
-        return {
-            "type": stimulus_type,
-            "count": len(stimuli_data),
-            "stimuli": stimuli_data
-        }
+            stimuli_data.append(
+                {
+                    "id": stimulus.id,
+                    "type": stimulus.stimulus_type.value,
+                    "title": stimulus.title,
+                    "content": stimulus.content[:200] + "..."
+                    if len(stimulus.content) > 200
+                    else stimulus.content,
+                    "source": stimulus.source,
+                    "timestamp": stimulus.timestamp.isoformat(),
+                    "intensity": stimulus.intensity.value,
+                    "sentiment": stimulus.sentiment,
+                    "keywords": stimulus.keywords,
+                    "cultural_impact": stimulus.cultural_impact,
+                    "economic_impact": stimulus.economic_impact,
+                    "social_impact": stimulus.social_impact,
+                }
+            )
+
+        return {"type": stimulus_type, "count": len(stimuli_data), "stimuli": stimuli_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/stimuli/fetch")
-async def fetch_stimuli(
-    authenticated: bool = Security(verify_api_key)
-):
+async def fetch_stimuli(authenticated: bool = Security(verify_api_key)):
     """Manually trigger fetching of environmental stimuli."""
     try:
         if not simulation_engine or not simulation_engine.stimuli_manager:
             raise HTTPException(status_code=404, detail="No active simulation or stimuli manager")
-        
+
         # Fetch stimuli
         stimuli = await simulation_engine.stimuli_manager.fetch_all_stimuli()
-        
+
         return {
             "status": "success",
             "fetched_count": len(stimuli),
-            "message": f"Fetched {len(stimuli)} environmental stimuli"
+            "message": f"Fetched {len(stimuli)} environmental stimuli",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -715,17 +717,17 @@ async def get_cultural_divergence():
     try:
         if not simulation_engine or not simulation_engine.stimuli_manager:
             raise HTTPException(status_code=404, detail="No active simulation or stimuli manager")
-        
+
         divergence_summary = simulation_engine.stimuli_manager.get_cultural_divergence_summary()
-        
+
         return {
             "cultural_divergence": divergence_summary,
             "interpretation": {
                 "mirroring_factor": f"{divergence_summary['mirroring_factor']:.1%} of culture mirrors reality",
                 "divergence_rate": f"{divergence_summary['divergence_rate']:.1%} divergence rate per stimulus",
                 "reality_baseline": "Baseline patterns from real-world data",
-                "future_projection": "Culture evolving toward future version of reality"
-            }
+                "future_projection": "Culture evolving toward future version of reality",
+            },
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -738,16 +740,9 @@ async def global_exception_handler(request, exc):
     # Don't leak internal error details in production
     error_detail = str(exc) if ENVIRONMENT != "production" else "Internal server error"
     return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": error_detail}
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": error_detail}
     )
 
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

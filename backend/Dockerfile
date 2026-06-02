@@ -61,7 +61,8 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/healthz || exit 1
+    CMD curl -f "http://localhost:${PORT:-8000}/healthz" || exit 1
 
-# Start command
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start command — bind to the platform-provided $PORT (Render/Fly inject it),
+# falling back to 8000 for local runs.
+CMD ["sh", "-c", "python -m uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
