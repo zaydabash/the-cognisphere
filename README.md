@@ -85,16 +85,24 @@ The central command center showing real-time metrics and civilization overview:
 
 ## Key Features Showcase
 
-### Environmental Stimuli Integration
-- **Real-world Data**: RSS feeds from BBC, CNN, technology, science, and business sources
-- **Cultural Mirroring**: Agents reflect 70% of real-world events in their culture
-- **Divergence Evolution**: 1% cultural drift creates unique "future version" of civilization
+### Environmental Stimuli Integration (opt-in)
+- **Real-world Data**: RSS feeds from BBC technology, science, and business sources
+- **Cultural Mirroring**: Agents reflect real-world events in their culture
+- **Divergence Evolution**: cultural drift creates a unique "future version" of civilization
 - **Sentiment Analysis**: Emotional impact processing of environmental events
+
+> Environmental stimuli pull **live** network data and are therefore
+> non-deterministic. They are **disabled by default** so seeded runs stay
+> reproducible. Enable them per-simulation with
+> `enable_environmental_stimuli=true` (config) or the matching field on the
+> `/simulation/initialize` request.
 
 ### Multi-Agent Intelligence
 - **Cognitive Architecture**: Each agent has unique personality traits (OCEAN model)
 - **Memory Systems**: Graph-based relationships + vector-based semantic memory
-- **Learning & Adaptation**: Agents evolve strategies based on experience
+- **Learning & Adaptation**: Agents adapt via evolving trust relationships and
+  experience-driven reflection (satisfaction tracks the emotional valence of
+  recalled memories); behaviour shifts with accumulated experience
 - **Social Dynamics**: Trust, betrayal, alliance formation, and faction creation
 
 ### Real-time Visualization
@@ -221,7 +229,8 @@ python scripts/seed_and_run.py --preset lab --ticks 300 --seed 42
 - Ideology vectors for soft alignment
 - Language lexicons with drifting slang
 - Episodic, semantic, and social memory
-- Internal deliberation with RAG from memory graph
+- Retrieval-augmented creation: agents recall recent episodic memories to shape
+  the myths and slang they generate, and reflect on memory valence to adapt
 
 ### Economy & Social Dynamics
 - Resource-based economy (food, energy, artifacts, influence)
@@ -234,13 +243,15 @@ python scripts/seed_and_run.py --preset lab --ticks 300 --seed 42
 - Language drift with slang mutation and JSD divergence tracking
 - Myth generation and canonization
 - Norm voting systems with soft penalties
-- Cultural diffusion modeled as contagion
+- Cultural diffusion via probabilistic slang adoption (contagion-style spread)
 
 ### Memory Layer
-- Neo4j graph database for relationships and knowledge
+- In-memory NetworkX knowledge graph by default; **optional Neo4j write-through**
+  (`memory_backend=neo4j`) persists every memory node/edge to a Neo4j database
+  and falls back to NetworkX automatically if no server is reachable
 - FAISS vector store for semantic retrieval
 - Snapshot/rewind capability for time travel
-- Deterministic seeded runs for reproducibility
+- Deterministic seeded runs for reproducibility (`PYTHONHASHSEED=0` is pinned by the CLI runner)
 
 ## Dashboard Features
 
@@ -255,7 +266,7 @@ python scripts/seed_and_run.py --preset lab --ticks 300 --seed 42
 
 ### Test Coverage
 
-The Cognisphere maintains **70%+ test coverage** via pytest with comprehensive unit and integration tests:
+The Cognisphere ships a 91-test pytest suite (unit + integration) covering the agent, culture, economy, social, negotiation, memory, engine, and auth subsystems. Line coverage of the simulation and adapter code is currently **~62%** (enforced floor of 60% via `pytest.ini`):
 
 ```bash
 # Run test suite with coverage
@@ -272,11 +283,17 @@ open htmlcov/index.html
 - **Performance Tests**: Benchmark simulations with 500+ agents
 - **Security Tests**: Input validation, path traversal prevention, CORS configuration
 
-**Coverage Targets:**
-- Core simulation logic: 80%+
-- API endpoints: 75%+
-- Memory systems: 70%+
-- Overall project: 70%+
+**Coverage Targets (aspirational):**
+- Core simulation logic (agents, culture, economy, scheduler): raise toward 80%
+- API endpoints: add `app.py` to the coverage set and test the FastAPI routes
+- Memory graph/vector internals: still lightly tested at the unit level (the
+  hybrid store is exercised end-to-end through the engine integration tests)
+
+The social (`SocialEngine`), negotiation (`NegotiationEngine` + double-auction
+`MarketFallback`), and hybrid-memory (`MemoryManager`) subsystems are wired into
+the tick loop and run on every simulation. Their activity (alliances, betrayals,
+institutions, reputation, negotiations, market clearings, world memories) is
+surfaced in `world.stats` and the `/simulation/status` response.
 
 ### Code Quality
 
@@ -297,11 +314,13 @@ isort backend/
 ```
 
 **Quality Standards:**
-- **Flake8**: Code style and complexity checks
-- **MyPy**: Static type checking
-- **Black**: Consistent code formatting
-- **Pytest**: Comprehensive test coverage
-- **Pre-commit**: Automated quality checks
+- **Black**: code is formatted (`black --line-length=100 backend/` — clean)
+- **isort**: imports sorted (`--profile=black` — clean)
+- **Flake8**: style + complexity checks pass cleanly (`flake8 backend/`, max-complexity 15)
+- **Pytest**: 94-test suite with coverage gate (60% floor, currently ~62%)
+- **Pre-commit**: hooks configured in `.pre-commit-config.yaml` (black, isort, flake8, hygiene)
+- **MyPy**: static type checking passes cleanly (`mypy backend/` — 0 errors
+  across 29 source files; config in `backend/mypy.ini`)
 
 ### Performance Benchmarks
 
@@ -391,21 +410,33 @@ The project has been audited for common security issues:
 
 If you discover a security vulnerability, please report it responsibly:
 
-1. **Email**: [security@example.com] (replace with your security contact)
-2. **Do not** open a public GitHub issue
-3. **Include**: Description, steps to reproduce, potential impact
-4. **Response**: We will respond within 48 hours
+1. **Report privately** via the repository's **Security** tab → **"Report a
+   vulnerability"** (GitHub private vulnerability reporting).
+2. **Do not** open a public GitHub issue for security problems.
+3. **Include**: description, steps to reproduce, and potential impact.
+
+See [SECURITY.md](./SECURITY.md) for full details.
 
 ## Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AGENTS` | 300 | Number of agents in simulation |
-| `SEED` | 42 | Random seed for reproducibility |
-| `TICK_MS` | 100 | Milliseconds per simulation tick |
-| `LLM_MODE` | mock | LLM mode: mock or openai |
-| `MEM_BACKEND` | neo4j | Memory backend: neo4j or networkx |
-| `VEC_BACKEND` | faiss | Vector backend: faiss or chroma |
+These are **simulation parameters**, set on the `SimulationConfig` object or via
+the `/simulation/initialize` API request (not environment variables — for those
+see [Environment Variables](#environment-variables) above):
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `num_agents` | 300 | Number of agents in simulation |
+| `seed` | 42 | Random seed for reproducibility |
+| `tick_duration_ms` | 100 | Milliseconds per simulation tick |
+| `llm_mode` | mock | LLM mode: `mock` or `openai` |
+| `memory_backend` | networkx | Memory backend: `networkx` or `neo4j` |
+| `vector_backend` | faiss | Vector backend: `faiss` or `chroma` |
+| `enable_environmental_stimuli` | false | Pull live RSS stimuli (non-deterministic) |
+
+> Reproducibility note: the CLI runner (`scripts/seed_and_run.py`) pins
+> `PYTHONHASHSEED=0` so that seeded runs are bit-for-bit reproducible. Set the
+> same environment variable when running the engine elsewhere if you need
+> identical results across processes.
 
 ## Project Structure
 
@@ -444,13 +475,11 @@ cognisphere/
 
 ### Docker Images
 
-```bash
-# Pull latest images
-docker pull ghcr.io/zaydbashir/cognisphere-backend:latest
-docker pull ghcr.io/zaydbashir/cognisphere-frontend:latest
+Build the images locally with Docker Compose (no prebuilt images are published
+to a registry yet):
 
-# Run with Docker Compose
-docker-compose up -d
+```bash
+docker-compose -f docker/docker-compose.yml up --build -d
 ```
 
 ### Environment Configuration
@@ -468,16 +497,21 @@ cp frontend/.env.example frontend/.env.local
 ### Release Process
 
 1. **Tag a release**: `git tag v0.1.0 && git push origin v0.1.0`
-2. **Automatic builds**: Docker images pushed to GHCR
-3. **Auto-deploy**: Frontend to GitHub Pages, Backend to Render
-4. **Health checks**: Automated deployment verification
+2. The `release.yml` workflow publishes a GitHub Release with notes.
+
+> Note: building and pushing container images to GHCR is not part of the active
+> release workflow. Build images locally with `docker-compose` (see below), or
+> add a `docker/build-push-action` step to `release.yml` to publish to GHCR.
 
 ### CI/CD Pipeline
 
-- **Continuous Integration**: Lint, type-check, tests on every push
-- **Release Automation**: Build and push Docker images on tags
-- **Auto-Deployment**: Frontend (GitHub Pages) + Backend (Render)
-- **Health Monitoring**: Automated deployment verification
+- **Continuous Integration** (`ci.yml`): on every push and pull request to
+  `main` it lints and type-checks the backend (black, isort, flake8, mypy), runs
+  the full pytest suite with coverage, smoke-tests the simulation, and builds the
+  frontend.
+- **Frontend deploy** (`deploy-frontend.yml`): publishes the dashboard to GitHub Pages.
+- **Backend deploy** (`deploy-backend.yml`): triggers a Render deploy (requires
+  the Render service and secrets to be configured — see the deployment section).
 
 ## License
 

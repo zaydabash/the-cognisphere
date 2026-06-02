@@ -211,14 +211,15 @@ def validate_snapshot_directory(cls, v):
 
 If you discover a security vulnerability, please report it responsibly:
 
-1. **Email**: [security@example.com] (replace with your security contact)
-2. **Do not** open a public GitHub issue
-3. **Include**: 
+1. **Use GitHub's private vulnerability reporting**: open the repository's
+   **Security** tab and click **"Report a vulnerability"** to open a private
+   advisory. (Enable it under Settings → Code security if not already on.)
+2. **Do not** open a public GitHub issue for security problems.
+3. **Include**:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
    - Suggested fix (if any)
-4. **Response**: We will respond within 48 hours
 
 ## Security Checklist
 

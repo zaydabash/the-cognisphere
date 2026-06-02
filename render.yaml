@@ -27,8 +27,11 @@ services:
         value: "100"
       - key: LOG_LEVEL
         value: INFO
+      # GitHub Pages origin (scheme + host only — no path). Must match the
+      # account that hosts Pages. The git remote is github.com/zaydabash/...,
+      # so Pages serves at https://zaydabash.github.io.
       - key: CORS_ORIGINS
-        value: "https://zaydbashir.github.io,https://zaydbashir.github.io/the-cognisphere"
+        value: "https://zaydabash.github.io"
       - key: API_KEY
         generateValue: true
       - key: REQUIRE_AUTH
