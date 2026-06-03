@@ -365,7 +365,7 @@ env/
 .env/
 
 # Package managers
-package-lock.json
+# package-lock.json is committed so CI installs are reproducible (npm ci).
 yarn.lock
 pnpm-lock.yaml
 
@@ -464,3 +464,4 @@ service-account.json
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+.gstack/
