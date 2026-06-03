@@ -401,7 +401,10 @@ class OpenAIAdapter(LLMAdapter):
 
         try:
             async with session.post(
-                url, json=data, headers=headers, timeout=self.config.timeout
+                url,
+                json=data,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=self.config.timeout),
             ) as response:
                 if response.status == 200:
                     result = await response.json()

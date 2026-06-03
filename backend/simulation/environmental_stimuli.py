@@ -103,11 +103,11 @@ class NewsAPISource(DataSource):
             async with aiohttp.ClientSession() as session:
                 for category in self.categories:
                     url = f"{self.base_url}/everything"
-                    params = {
-                        "apiKey": self.api_key,
+                    params: Dict[str, str] = {
+                        "apiKey": self.api_key or "",
                         "q": category,
                         "sortBy": "publishedAt",
-                        "pageSize": 10,
+                        "pageSize": "10",
                         "language": "en",
                     }
 
